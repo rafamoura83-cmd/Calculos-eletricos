@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Elétrica de Motor</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --accent: #f0a500;
+    --accent2: #ff6b35;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --input-bg: #0d1117;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Barlow Condensed', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 16px;
+  }
+
+  /* Grid de fundo */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(240,165,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(240,165,0,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .logo-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  /* Seção de modo */
+  .mode-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 10px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active {
+    background: var(--accent);
+    color: #000;
+  }
+
+  /* Card principal */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .card-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* Inputs */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .input-row.triple {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+  }
+
+  input[type="number"], select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    padding: 10px 12px;
+    width: 100%;
+  }
+
+  select {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  select option { background: var(--panel); }
+
+  .unit {
+    padding: 0 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    border-left: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  /* Botão calcular */
+  .btn-calc {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .btn-calc:hover { opacity: 0.9; }
+  .btn-calc:active { transform: scale(0.99); }
+
+  /* Resultados */
+  .results {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .results.visible { display: flex; }
+
+  .result-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .result-box {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .result-box.highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(240,165,0,0.15);
+  }
+
+  .result-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .result-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 26px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .result-unit {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Tabela de fios */
+  .wire-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .wire-table th {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wire-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+  }
+
+  .wire-table tr.recommended td {
+    background: rgba(240,165,0,0.08);
+    color: var(--accent);
+  }
+
+  .wire-table tr.recommended td:first-child::before {
+    content: '▶ ';
+    color: var(--accent);
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    margin-left: 6px;
+  }
+
+  .info-note {
+    font-size: 12px;
+    color: var(--muted);
+    background: rgba(48,54,61,0.3);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    line-height: 1.6;
+  }
+
+  /* Formula display */
+  .formula-bar {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    background: rgba(48,54,61,0.3);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .formula-bar span { color: var(--accent); }
+
+  @media (max-width: 480px) {
+    .input-row { grid-template-columns: 1fr; }
+    .input-row.triple { grid-template-columns: 1fr 1fr; }
+    h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-tag">⚡ Ferramenta de Engenharia</div>
+    <h1>CALC <span>MOTOR</span></h1>
+    <p class="subtitle">Potência · Tensão · Corrente · Dimensionamento de Fio</p>
+  </header>
+
+  <!-- Seleção de modo -->
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="setMode('pot_ten')">CV + Tensão → I</button>
+    <button class="mode-btn" onclick="setMode('pot_cor')">CV + Corrente → V</button>
+    <button class="mode-btn" onclick="setMode('cor_ten')">I + Tensão → CV</button>
+  </div>
+
+  <!-- Card de entrada -->
+  <div class="card">
+    <div class="card-title" id="card-title">// Calcular Corrente</div>
+
+    <div id="formula-display" class="formula-bar"></div>
+
+    <div id="inputs-container"></div>
+
+    <button class="btn-calc" onclick="calcular()">CALCULAR</button>
+  </div>
+
+  <!-- Resultados -->
+  <div class="card">
+    <div class="card-title">// Resultados</div>
+    <div class="results" id="results">
+      <div class="result-row" id="result-boxes"></div>
+    </div>
+    <div id="results-empty" style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0;">
+      Preencha os dados e clique em CALCULAR
+    </div>
+  </div>
+
+  <!-- Dimensionamento de fio -->
+  <div class="card" id="wire-card" style="display:none">
+    <div class="card-title">// Dimensionamento de Condutor</div>
+    <div class="info-note" id="wire-note" style="margin-bottom:16px;"></div>
+    <table class="wire-table" id="wire-table-el"></table>
+    <p style="margin-top:12px;" class="info-note">
+      Referência: NBR 5410 — instalação em eletroduto embutido, temperatura 30°C, fator 1,0.<br>
+      Sempre consulte um engenheiro eletricista para o projeto definitivo.
+    </p>
+  </div>
+
+</div>
+
+<script>
+let modo = 'pot_ten';
+
+const MODOS = {
+  pot_ten: {
+    title: '// Calcular Corrente',
+    formula: 'I = (CV × 736) / (η × FP × V × √3)',
+    campos: [
+      { id:'cv',  label:'Potência', unit:'CV', placeholder:'ex: 15' },
+      { id:'tensao', label:'Tensão', unit:'V', placeholder:'ex: 380', tipo:'select',
+        opcoes: [['220','220 V'], ['380','380 V'], ['440','440 V'], ['127','127 V']] },
+      { id:'fp',  label:'Fator de Pot.', unit:'FP', placeholder:'0.85', def:'0.85' },
+      { id:'eta', label:'Rendimento', unit:'η', placeholder:'0.92', def:'0.92' },
+      { id:'fases', label:'Sistema', unit:'', tipo:'select',
+        opcoes: [['3','Trifásico'],['1','Monofásico']] }
+    ]
+  },
+  pot_cor: {
+    title: '// Calcular Tensão',
+    formula: 'V = (CV × 736) / (η × FP × I × √3)',
+    campos: [
+      { id:'cv',  label:'Potência', unit:'CV', placeholder:'ex: 15' },
+      { id:'corrente', label:'Corrente', unit:'A', placeholder:'ex: 30' },
+      { id:'fp',  label:'Fator de Pot.', unit:'FP', placeholder:'0.85', def:'0.85' },
+      { id:'eta', label:'Rendimento', unit:'η', placeholder:'0.92', def:'0.92' },
+      { id:'fases', label:'Sistema', unit:'', tipo:'select',
+        opcoes: [['3','Trifásico'],['1','Monofásico']] }
+    ]
+  },
+  cor_ten: {
+    title: '// Calcular Potência',
+    formula: 'CV = (I × V × FP × η × √3) / 736',
+    campos: [
+      { id:'corrente', label:'Corrente', unit:'A', placeholder:'ex: 30' },
+      { id:'tensao', label:'Tensão', unit:'V', placeholder:'ex: 380', tipo:'select',
+        opcoes: [['220','220 V'], ['380','380 V'], ['440','440 V'], ['127','127 V']] },
+      { id:'fp',  label:'Fator de Pot.', unit:'FP', placeholder:'0.85', def:'0.85' },
+      { id:'eta', label:'Rendimento', unit:'η', placeholder:'0.92', def:'0.92' },
+      { id:'fases', label:'Sistema', unit:'', tipo:'select',
+        opcoes: [['3','Trifásico'],['1','Monofásico']] }
+    ]
+  }
+};
+
+// Tabela de condutores NBR 5410 (corrente máx. em eletroduto, 3 condutores)
+const FIOS = [
+  { mm2: 1.5,  a: 15.5 },
+  { mm2: 2.5,  a: 21   },
+  { mm2: 4,    a: 28   },
+  { mm2: 6,    a: 36   },
+  { mm2: 10,   a: 50   },
+  { mm2: 16,   a: 66   },
+  { mm2: 25,   a: 84   },
+  { mm2: 35,   a: 103  },
+  { mm2: 50,   a: 125  },
+  { mm2: 70,   a: 158  },
+  { mm2: 95,   a: 191  },
+  { mm2: 120,  a: 220  },
+  { mm2: 150,  a: 253  },
+  { mm2: 185,  a: 288  },
+  { mm2: 240,  a: 339  },
+];
+
+function setMode(m) {
+  modo = m;
+  document.querySelectorAll('.mode-btn').forEach((b,i) => {
+    b.classList.toggle('active', Object.keys(MODOS)[i] === m);
+  });
+  renderInputs();
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('results-empty').style.display = 'block';
+  document.getElementById('wire-card').style.display = 'none';
+}
+
+function renderInputs() {
+  const cfg = MODOS[modo];
+  document.getElementById('card-title').textContent = cfg.title;
+  document.getElementById('formula-display').innerHTML =
+    `<span>Fórmula:</span>  ${cfg.formula}`;
+
+  const cont = document.getElementById('inputs-container');
+  cont.innerHTML = '';
+
+  const rows = [];
+  for (let i = 0; i < cfg.campos.length; i += 2) {
+    rows.push(cfg.campos.slice(i, i+2));
+  }
+
+  rows.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'input-row' + (row.length === 3 ? ' triple' : '');
+    row.forEach(c => {
+      div.innerHTML += buildField(c);
+    });
+    cont.appendChild(div);
+  });
+}
+
+function buildField(c) {
+  if (c.tipo === 'select') {
+    const opts = c.opcoes.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('');
+    return `<div class="field">
+      <label>${c.label}</label>
+      <div class="input-wrap">
+        <select id="${c.id}">${opts}</select>
+      </div>
+    </div>`;
+  }
+  return `<div class="field">
+    <label>${c.label}</label>
+    <div class="input-wrap">
+      <input type="number" id="${c.id}" placeholder="${c.placeholder}" value="${c.def||''}" step="any" min="0">
+      <span class="unit">${c.unit}</span>
+    </div>
+  </div>`;
+}
+
+function g(id) {
+  const el = document.getElementById(id);
+  return el ? parseFloat(el.value) : NaN;
+}
+
+function calcular() {
+  const fp  = g('fp')  || 0.85;
+  const eta = g('eta') || 0.92;
+  const fases = parseInt(document.getElementById('fases')?.value || '3');
+  const sqrt3 = fases === 3 ? Math.sqrt(3) : 1;
+
+  let corrente = NaN, tensao = NaN, cv = NaN, kw = NaN;
+
+  if (modo === 'pot_ten') {
+    cv = g('cv');
+    tensao = parseFloat(document.getElementById('tensao').value);
+    const w = cv * 736;
+    corrente = w / (eta * fp * tensao * sqrt3);
+    kw = cv * 0.736;
+  } else if (modo === 'pot_cor') {
+    cv = g('cv');
+    corrente = g('corrente');
+    const w = cv * 736;
+    tensao = w / (eta * fp * corrente * sqrt3);
+    kw = cv * 0.736;
+  } else {
+    corrente = g('corrente');
+    tensao = parseFloat(document.getElementById('tensao').value);
+    const w = corrente * tensao * fp * eta * sqrt3;
+    cv = w / 736;
+    kw = w / 1000;
+  }
+
+  // Exibir resultados
+  const boxes = document.getElementById('result-boxes');
+  boxes.innerHTML = `
+    <div class="result-box highlight">
+      <div class="result-label">Potência</div>
+      <div class="result-value">${cv.toFixed(1)}</div>
+      <div class="result-unit">CV</div>
+    </div>
+    <div class="result-box highlight">
+      <div class="result-label">Potência</div>
+      <div class="result-value">${(cv*0.736).toFixed(2)}</div>
+      <div class="result-unit">kW</div>
+    </div>
+    <div class="result-box highlight">
+      <div class="result-label">Tensão</div>
+      <div class="result-value">${Math.round(tensao)}</div>
+      <div class="result-unit">V</div>
+    </div>
+    <div class="result-box highlight">
+      <div class="result-label">Corrente</div>
+      <div class="result-value">${corrente.toFixed(1)}</div>
+      <div class="result-unit">A</div>
+    </div>
+    <div class="result-box">
+      <div class="result-label">Fator Pot.</div>
+      <div class="result-value">${fp.toFixed(2)}</div>
+      <div class="result-unit">FP</div>
+    </div>
+    <div class="result-box">
+      <div class="result-label">Rendimento</div>
+      <div class="result-value">${(eta*100).toFixed(0)}</div>
+      <div class="result-unit">%</div>
+    </div>
+  `;
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results-empty').style.display = 'none';
+
+  // Dimensionar fio
+  dimensionarFio(corrente);
+}
+
+function dimensionarFio(corrente) {
+  // Aplica fator 1.25 para corrente nominal (partida)
+  const iProj = corrente * 1.25;
+
+  const card = document.getElementById('wire-card');
+  const tabEl = document.getElementById('wire-table-el');
+  const note  = document.getElementById('wire-note');
+
+  note.innerHTML = `Corrente nominal: <strong style="color:var(--accent)">${corrente.toFixed(1)} A</strong> &nbsp;|&nbsp; 
+    Corrente de projeto (×1,25): <strong style="color:var(--accent2)">${iProj.toFixed(1)} A</strong>`;
+
+  let html = `<thead><tr>
+    <th>Seção</th><th>Cap. máx.</th><th>Status</th>
+  </tr></thead><tbody>`;
+
+  let recomendado = false;
+  FIOS.forEach(f => {
+    const ok = f.a >= iProj;
+    let cls = '', badge = '';
+    if (ok && !recomendado) {
+      cls = 'recommended';
+      badge = '<span class="badge">OK</span>';
+      recomendado = true;
+    }
+    html += `<tr class="${cls}">
+      <td>${f.mm2} mm²</td>
+      <td>${f.a} A</td>
+      <td>${ok ? (cls ? '✔ Recomendado' + badge : '✔ Adequado') : '✖ Insuficiente'}</td>
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  tabEl.innerHTML = html;
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Inicializar
+renderInputs();
+</script>
+</body>
+</html>
